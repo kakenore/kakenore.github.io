@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>グラム単価計算アプリ</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+      }
+      .tabs {
+        display: flex;
+        margin-bottom: 10px;
+        gap: 5px;
+      }
+      .tab {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 6px;
+        background: #eee;
+      }
+      .tab.active {
+        background: #3498db;
+        color: white;
+      }
+      .form {
+        margin-bottom: 20px;
+      }
+      .products {
+        margin-top: 10px;
+      }
+      .product {
+        border-bottom: 1px solid #ccc;
+        padding: 5px 0;
+        display: flex;
+        justify-content: space-between;
+      }
+      .preset-buttons button,
+      .preset-pricebuttons button {
+        margin: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>グラム単価計算アプリ</h1>
+
+    <!-- タブエリア -->
+    <div class="tabs" id="tabs"></div>
+    <button onclick="addTab()">＋タブ追加</button>
+
+    <!-- 入力フォーム -->
+    <div class="form">
+      商品名: <input type="text" id="name" />
+      <br />
+      グラム数: <input type="number" id="grams" /> g
+      <div class="preset-buttons">
+        <button onclick="setGrams(100)">+100g</button>
+        <button onclick="setGrams(200)">+200g</button>
+        <button onclick="setGrams(500)">+500g</button>
+        <button onclick="setGrams(1000)">+1000g</button>
+        <button
+          onclick="resetField('grams','グラム数をリセットしますか？')"
+          style="background: #f39c12; color: white"
+        >
+          リセット
+        </button>
+      </div>
+      価格: <input type="number" id="price" /> 円
+      <div class="preset-pricebuttons">
+        <button onclick="setPrices(100)">+100円</button>
+        <button onclick="setPrices(200)">+200円</button>
+        <button onclick="setPrices(500)">+500円</button>
+        <button onclick="setPrices(1000)">+1000円</button>
+        <button
+          onclick="resetField('price','価格をリセットしますか？')"
+          style="background: #f39c12; color: white"
+        >
+          リセット
+        </button>
+      </div>
+      <button onclick="addProduct()">追加する</button>
+    </div>
+
+    <!-- 商品リスト -->
+    <div class="products" id="products"></div>
+
+    <script>
+      let tabs = [];
+      let currentTabIndex = 0;
+
+      // ---- LocalStorage 保存・復元 ----
+      function saveTabs() {
+        const data = {
+          tabs: tabs,
+          currentTabIndex: currentTabIndex,
+        };
+        localStorage.setItem("tabsData", JSON.stringify(data));
+      }
+
+      function loadTabs() {
+        const saved = localStorage.getItem("tabsData");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            tabs = parsed.tabs || [{ name: "食品", products: [] }];
+            currentTabIndex = parsed.currentTabIndex || 0;
+          } catch (e) {
+            console.error("復元失敗:", e);
+            tabs = [{ name: "食品", products: [] }];
+            currentTabIndex = 0;
+          }
+        } else {
+          tabs = [{ name: "食品", products: [] }];
+          currentTabIndex = 0;
+        }
+        renderTabs();
+        render();
+      }
+
+      // ---- タブ操作 ----
+      function addTab() {
+        tabs.push({ name: "新しいタブ", products: [] });
+        currentTabIndex = tabs.length - 1;
+        renderTabs();
+        render();
+        saveTabs();
+      }
+
+      function switchTab(index) {
+        currentTabIndex = index;
+        renderTabs();
+        render();
+        saveTabs();
+      }
+
+      function renameTab(index) {
+        const newName = prompt("タブ名を入力してください", tabs[index].name);
+        if (newName) {
+          tabs[index].name = newName;
+          renderTabs();
+          saveTabs();
+        }
+      }
+
+      function deleteTab(index) {
+        if (!confirm("このタブを削除しますか？")) return;
+        tabs.splice(index, 1);
+        if (tabs.length === 0) {
+          tabs = [{ name: "食品", products: [] }];
+        }
+        currentTabIndex = Math.min(currentTabIndex, tabs.length - 1);
+        renderTabs();
+        render();
+        saveTabs();
+      }
+
+      // ---- 商品操作 ----
+      function addProduct() {
+        const name = document.getElementById("name").value;
+        const grams = parseFloat(document.getElementById("grams").value);
+        const price = parseFloat(document.getElementById("price").value);
+
+        if (!name || isNaN(grams) || isNaN(price) || grams <= 0) {
+          alert("正しい値を入力してください");
+          return;
+        }
+
+        const unitPrice = price / grams;
+        tabs[currentTabIndex].products.push({ name, grams, price, unitPrice });
+
+        document.getElementById("name").value = "";
+        document.getElementById("grams").value = "";
+        document.getElementById("price").value = "";
+
+        render();
+        saveTabs();
+      }
+
+      function deleteProduct(index) {
+        if (!confirm("この商品を削除しますか？")) return;
+        tabs[currentTabIndex].products.splice(index, 1);
+        render();
+        saveTabs();
+      }
+
+      // ---- 入力補助 ----
+      function setGrams(value) {
+        const gramsInput = document.getElementById("grams");
+        let current = parseFloat(gramsInput.value) || 0;
+        gramsInput.value = current + value;
+      }
+
+      function setPrices(value) {
+        const priceInput = document.getElementById("price");
+        let current = parseFloat(priceInput.value) || 0;
+        priceInput.value = current + value;
+      }
+
+      function resetField(fieldId, message) {
+        if (confirm(message)) {
+          document.getElementById(fieldId).value = 0;
+        }
+      }
+
+      // ---- レンダリング ----
+      function renderTabs() {
+        const tabsDiv = document.getElementById("tabs");
+        tabsDiv.innerHTML = "";
+        tabs.forEach((tab, i) => {
+          const tabDiv = document.createElement("div");
+          tabDiv.className = "tab" + (i === currentTabIndex ? " active" : "");
+          tabDiv.textContent = tab.name;
+          tabDiv.onclick = () => switchTab(i);
+
+          // 操作用ボタン
+          const renameBtn = document.createElement("button");
+          renameBtn.textContent = "✏️";
+          renameBtn.onclick = (e) => {
+            e.stopPropagation();
+            renameTab(i);
+          };
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteTab(i);
+          };
+
+          tabDiv.appendChild(renameBtn);
+          tabDiv.appendChild(deleteBtn);
+          tabsDiv.appendChild(tabDiv);
+        });
+      }
+
+      function render() {
+        const productsDiv = document.getElementById("products");
+        productsDiv.innerHTML = "";
+        tabs[currentTabIndex].products.forEach((p, i) => {
+          const div = document.createElement("div");
+          div.className = "product";
+          div.innerHTML = `
+          <span>${p.name} : ${p.grams}g / ${p.price}円 → 
+          <b>${p.unitPrice.toFixed(2)} 円/g</b></span>
+          <button onclick="deleteProduct(${i})">削除</button>
+        `;
+          productsDiv.appendChild(div);
+        });
+      }
+
+      // 初期ロード
+      window.onload = loadTabs;
+    </script>
+  </body>
+</html>
