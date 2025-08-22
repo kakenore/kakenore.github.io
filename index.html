@@ -7,38 +7,127 @@
       body {
         font-family: sans-serif;
         padding: 20px;
+        max-width: 800px;
+        margin: auto;
       }
+
+      h1 {
+        font-size: 1.5em;
+        text-align: center;
+      }
+
+      /* タブ */
       .tabs {
         display: flex;
+        flex-wrap: wrap; /* 折り返す */
         margin-bottom: 10px;
         gap: 5px;
+        overflow-x: auto; /* スマホで横スクロール */
       }
       .tab {
-        padding: 5px 10px;
+        padding: 6px 12px;
         border: 1px solid #ccc;
         cursor: pointer;
         border-radius: 6px;
         background: #eee;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.9em;
       }
       .tab.active {
         background: #3498db;
         color: white;
       }
+      .tab button {
+        font-size: 0.8em;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      /* 入力フォーム */
       .form {
         margin-bottom: 20px;
+        font-size: 1em;
       }
+      .form input {
+        padding: 6px;
+        font-size: 1em;
+        margin: 4px 0;
+        width: 100%; /* スマホでは全幅 */
+        max-width: 200px; /* PCでは広がりすぎない */
+      }
+      .preset-buttons,
+      .preset-pricebuttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 5px 0;
+      }
+      .preset-buttons button,
+      .preset-pricebuttons button {
+        padding: 6px 10px;
+        min-width: 60px;
+        font-size: 0.9em;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+
+      /* 商品リスト */
       .products {
         margin-top: 10px;
       }
       .product {
         border-bottom: 1px solid #ccc;
-        padding: 5px 0;
+        padding: 6px 0;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        font-size: 1em;
+        flex-wrap: wrap;
       }
-      .preset-buttons button,
-      .preset-pricebuttons button {
-        margin: 2px;
+      .product button {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+
+      /* スマホ向け調整 */
+      @media (max-width: 600px) {
+        body {
+          padding: 10px;
+        }
+        h1 {
+          font-size: 1.2em;
+        }
+        .tab {
+          font-size: 0.8em;
+          padding: 5px 8px;
+        }
+        .form input {
+          font-size: 1em;
+          width: 100%; /* スマホで幅いっぱい */
+        }
+        .preset-buttons button,
+        .preset-pricebuttons button {
+          font-size: 0.8em;
+          padding: 6px;
+        }
+        .product {
+          font-size: 0.9em;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .product button {
+          margin-top: 5px;
+          align-self: flex-end;
+        }
       }
     </style>
   </head>
